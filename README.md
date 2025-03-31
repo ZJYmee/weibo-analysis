@@ -34,7 +34,7 @@ docker run \
 
 ### 2. 配置文件
 
-在.env文件中配置以下信息：
+添加.env文件，配置以下信息：
 
 ```bash
 NEO4J_URI=bolt://localhost:7687
@@ -42,7 +42,7 @@ NEO4J_USER=your username
 NEO4J_PASSWORD=your password
 ```
 
-在cookies.json文件中填入你的微博的cookies：
+添加cookies.json文件，填入你的微博的cookies：
 
 ```json
 {
@@ -111,7 +111,7 @@ python read-neo4j.py
 
 仅保留用户节点，删除帖子节点和评论节点，并保留用户之间的发布、点赞、评论、转发关系。仅保留与目标用户关联度较高的用户节点。
 
-> 注意：此处需要在代码中设定`target_node`和`threshold`的值，分别表示目标用户ID和关联度阈值。
+> 注意：此处需要在代码中设定 target_node 和 threshold 的值，分别表示目标用户ID和关联度阈值。
 
 
 
