@@ -5,12 +5,32 @@ import matplotlib.pyplot as plt
 import matplotlib
 from dotenv import load_dotenv
 import numpy as np
+from weibo_follow import Follow
+import json
+import uuid
 
 # 设置matplotlib支持中文
 matplotlib.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['axes.unicode_minus'] = False  # 正确显示负号
 
+
+def follow_network(user_id, cookie):
+    # 将爬取的关注列表写入network.txt
+    fw = Follow(user_id, cookie)    # 调用Weibo类，创建微博实例wb
+    fw.get_follow_list()            # 获取关注列表的uid和昵称
+    print(fw.follow_list)           # 输出关注列表的uid
+    print(fw.follow_name_list)      # 输出关注列表的昵称
+
+    # 返回关注关系列表和用户信息
+    follow_relations = [(user_id, follow_id) for follow_id in fw.follow_list if user_id != follow_id]
+    user_info = {}  # 主用户信息
+    for follow_id, follow_name in zip(fw.follow_list, fw.follow_name_list):
+        if follow_id == user_id:
+            continue  # 跳过主用户
+        user_info[follow_id] = {"screen_name": follow_name}  # 关注用户信息
+
+    return follow_relations, user_info
 
 def merge_user_and_post(G):
     nodes_to_remove = []
@@ -196,11 +216,28 @@ convert_to_nx_graph(driver)
 driver.close()
 G = merge_user_and_post(G)
 
+with open("cookies.json", "r") as f:
+    cookies = json.load(f)
+
+target_node = 1676593803 # 请将此处的节点ID替换为你要计算关联度的节点ID
+follow_relations, user_info = follow_network(target_node, cookies)
+
+# 将用户节点添加到图中
+for user_id, user_data in user_info.items():
+    if user_id not in G.nodes:
+        G.add_node(int(user_id), label="USER", properties=user_data)
+
+
+# 将关注关系添加到图中
+for user_id, follow_id in follow_relations:
+    edge_key = str(uuid.uuid4())  # 生成随机的唯一键
+    G.add_edge(int(user_id), int(follow_id), key=edge_key, label="FOLLOWS", weight=5)
+
+G.remove_edges_from(nx.selfloop_edges(G))
 #print(G.nodes(data=True))
 #print(G.edges(data=True, keys=True))
 
 # 计算与目标节点的关联度
-target_node = 1676593803 # 请将此处的节点ID替换为你要计算关联度的节点ID
 association_degrees = calculate_association_degree(G, target_node)
 
 # 输出关联度
