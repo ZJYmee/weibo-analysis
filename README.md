@@ -109,7 +109,9 @@ graph TD;
 python read-neo4j.py
 ```
 
-仅保留用户节点，删除帖子节点和评论节点，并保留用户之间的发布、点赞、评论、转发关系。仅保留与目标用户关联度较高的用户节点。
+* 仅保留用户节点，删除帖子节点和评论节点，并保留用户之间的发布、点赞、评论、转发关系。
+* 添加用户节点之间的关注关系。
+* 仅保留与目标用户关联度较高的用户节点。
 
 > 注意：此处需要在代码中设定 target_node 和 threshold 的值，分别表示目标用户ID和关联度阈值。
 
@@ -118,6 +120,8 @@ python read-neo4j.py
 
 ## 参考代码
 https://github.com/Driftcell/weibo-social-network-crawler
+
+https://github.com/Artificialimbecile/WeiboSpider
 
 ## 许可证
 
