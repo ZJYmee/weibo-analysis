@@ -115,13 +115,28 @@ python read-neo4j.py
 
 > 注意：此处需要在代码中设定 target_node 和 threshold 的值，分别表示目标用户ID和关联度阈值。
 
+### 5. 文本内容爬取
+```bash
+python weibo.py
+```
+运行代码，可得到目标用户的微博详细内容的csv文件。（mongodb和mysql可选）
 
+> 注意：此处需要在代码中设定 user_id_list 为目标用户id
 
+### 6. 文本内容过滤与可视化
+```bash
+python topic.py
+```
+由于爬取到的内容特别多，直接输入LLM效果不佳且成本较高，因此需要先对文本内容进行过滤。运行代码，可输出过滤后的文本内容，并生成词云图。
 
-## 参考代码
+> 注意：此处需要在代码中设定 csv_file 为你在第5步生成的csv文件路径。
+
+## 参考资料
 https://github.com/Driftcell/weibo-social-network-crawler
 
 https://github.com/Artificialimbecile/WeiboSpider
+
+停用词表：https://github.com/CharyHong/Stopwords
 
 ## 许可证
 
