@@ -2,17 +2,19 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import time
 import csv
-from utils import Weibo, get_str_with_id
+from utils import Weibo, get_str_with_id, generate_topic_pic
 import os
 import openai
 from openai import OpenAI
 app = Flask(__name__)
+import base64
+import json
 # 配置CORS，允许所有来源的请求
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}})
 
 def generate_model_output(target_str):
     client = OpenAI(
-        api_key="Your API Key",
+        api_key="",
         base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
     )
     completion = client.chat.completions.create(
@@ -80,20 +82,32 @@ def get_response(message):
     try:
         id = int(message)
     except ValueError:
-        return "无效的微博ID，请输入数字。"
+        return {"text": "无效的微博ID，请输入数字。", "image": None}
+    
     try:
         get_str_with_id(id)
         csv_file_path = find_specific_csv(f"{id}.csv")
         if not csv_file_path:
-            return "未找到相关微博数据，请检查微博ID。"
+            return {"text": "未找到相关微博数据，请检查微博ID。", "image": None}
+        
         string_to_concatenate = concatenate_text_from_csv(csv_file_path[0])
         if not string_to_concatenate:
-            return "微博数据为空，请检查微博ID。"
+            return {"text": "微博数据为空，请检查微博ID。", "image": None}
+        
         final_ans = generate_model_output(string_to_concatenate)
-        return final_ans
+        generate_topic_pic(id)
+        # 检查并读取图片
+        image_path = f"./pic/{id}.png"
+        image_data = None
+        if os.path.exists(image_path):
+            with open(image_path, 'rb') as img_file:
+                image_bytes = img_file.read()
+                image_data = base64.b64encode(image_bytes).decode('utf-8')
+        print({"text": final_ans, "image": image_data})
+        return {"text": final_ans, "image": image_data}
         
     except Exception as e:
-        return f"获取微博内容失败: {str(e)}"
+        return {"text": f"获取微博内容失败: {str(e)}", "image": None}
 
 
 # 添加日志记录，帮助调试

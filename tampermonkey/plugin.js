@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Chat Box Plugin
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Weibo search
+// @version      0.2
+// @description  Weibo search with image and text response
 // @author       Anonymous
 // @match        *://*/*
 // @grant        GM_addStyle
@@ -92,6 +92,7 @@
             padding: 8px;
             border-radius: 5px;
             color: #000000;
+            word-break: break-all;
         }
 
         .sent {
@@ -131,7 +132,15 @@
         .chat-input button:hover {
             background: #45a049;
         }
+
+        /* 针对图片的样式 */
+        .message img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin: 5px;
+        }
     `);
+
     // 创建聊天框HTML
     const chatHTML = `
         <div class="chat-container">
@@ -208,12 +217,21 @@
         isDragging = false;
     }
 
-    // 添加消息到聊天框
+    // 添加文字消息到聊天框
     function addMessage(message, type) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', type);
         messageDiv.textContent = message;
         messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // 添加图片消息到聊天框
+    function addImage(imageBase64, type) {
+        const img = document.createElement('img');
+        img.src = 'data:image/png;base64,' + imageBase64;
+        img.classList.add('message', type);
+        messagesContainer.appendChild(img);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
@@ -226,7 +244,7 @@
             // 添加调试日志
             console.log('Sending message:', message);
 
-            // 修改fetch请求
+            // 发起请求到后端
             fetch('http://localhost:5000/message', {
                 method: 'POST',
                 headers: {
@@ -237,15 +255,20 @@
                 credentials: 'omit', // 不发送cookies
                 body: JSON.stringify({ message: message })
             })
-                .then(response => {
+            .then(response => {
                 console.log('Response status:', response.status); // 调试日志
                 return response.json();
             })
-                .then(data => {
+            .then(data => {
                 console.log('Received data:', data); // 调试日志
-                addMessage(data.response, 'received');
+                if(data.response.text) {
+                    addMessage(data.response.text, 'received');
+                }
+                if(data.response.image) {
+                    addImage(data.response.image, 'received');
+                }
             })
-                .catch(error => {
+            .catch(error => {
                 console.error('Error:', error);
                 addMessage('发送失败，请检查服务器连接', 'received');
             });
