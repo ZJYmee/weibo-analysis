@@ -1,11 +1,5 @@
-## 微博社交圈分析和文本爬取：
-已实现功能：
-* 爬取指定微博用户的微博评论、转发、点赞等信息，并存储到Neo4j数据库中；
-* 根据用户间的互动程度，提取关联度较高的关系，形成简化后的networkx图；
-* 爬取指定微博用户的微博内容，生成词云图
-* 对爬取的文本内容过滤，仅保留具有代表性的微博，便于输入LLM
+## 微博用户画像分析系统
 
-  
 ### 环境要求：
 
 ```
@@ -64,74 +58,15 @@ NEO4J_PASSWORD=your password
 
 请将从浏览器中获取的微博cookies填入对应字段。
 
-### 3. 运行爬虫
-
-使用以下命令运行爬虫：
-
-```bash
-python main.py -u xxxxxx
-```
-
-其中：
-
-- -u/--user：指定一个微博用户ID作为爬取入口
-- 可以通过-h参数查看更多选项说明
-
-
-
-Neo4j图数据库中的节点和关系设计如下：
-
-```mermaid
-graph TD;
-    User["用户节点"]
-    Post["帖子节点"]
-    Comment["评论节点"]
-    
-    User -->|发布| Post
-    User -->|点赞| Post
-    User -->|评论| Comment
-    Comment -->|评论于| Post
-    User -->|转发| Post
-    Post -->|转发自| Post
-    
-    %% 节点样式
-    classDef user fill:#f9f,stroke:#333,stroke-width:2px;
-    classDef post fill:#bbf,stroke:#333,stroke-width:2px;
-    classDef comment fill:#bfb,stroke:#333,stroke-width:2px;
-    
-    %% 应用样式
-    class User user;
-    class Post post;
-    class Comment comment;
-```
-### 4. 简化关系图
-
+### 3. 社交圈分析程序运行
+使用以下命令运行社交圈GUI程序：
 
 ```bash
-python read-neo4j.py
+python net_gui.py
 ```
 
-* 仅保留用户节点，删除帖子节点和评论节点，并保留用户之间的发布、点赞、评论、转发关系。
-* 添加用户节点之间的关注关系。
-* 仅保留与目标用户关联度较高的用户节点。
+### 4. 用户画像分析平台运行
 
-> 注意：此处需要在代码中设定 target_node 和 threshold 的值，分别表示目标用户ID和关联度阈值。
-
-### 5. 文本内容爬取
-```bash
-python weibo.py
-```
-运行代码，可得到目标用户的微博详细内容的csv文件。（mongodb和mysql可选）
-
-> 注意：此处需要在代码中设定 user_id_list 为目标用户id
-
-### 6. 文本内容过滤与可视化
-```bash
-python topic.py
-```
-由于爬取到的内容特别多，直接输入LLM效果不佳且成本较高，因此需要先对文本内容进行过滤。运行代码，可输出过滤后的文本内容，并生成词云图。
-
-> 注意：此处需要在代码中设定 csv_file 为你在第5步生成的csv文件路径。
 
 ## 参考资料
 https://github.com/Driftcell/weibo-social-network-crawler
