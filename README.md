@@ -66,8 +66,26 @@ python net_gui.py
 ```
 
 ### 4. 用户画像分析平台运行
+1. 在`./tampermonkey/app.py`中设置API_KEY
+```
+def generate_model_output(target_str):
+    client = OpenAI(
+        api_key="",
+        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+    )
+```
 
+2. 将`./tampermonkey/plugin.js`置入你的油猴chrome插件中，并开启该插件
 
+3. 运行后端服务器程序
+```bash
+cd ./tampermonkey
+python ./app.py
+```
+
+4. 向前端chatbox中发送微博用户的id，等待处理，你可以在后端的终端看到处理过程。
+
+5. 你可以查看部署文档，有具体的图示。
 ## 参考资料
 https://github.com/Driftcell/weibo-social-network-crawler
 
