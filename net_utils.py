@@ -68,7 +68,7 @@ class WeiboIDScraper:
         """
         page_count = self.get_page_count()
         print(f"微博总页数：{page_count}")
-        for page in range(1, page_count + 1):
+        for page in range(1, 2):#page_count + 1):
             print(f"正在爬取第 {page} 页")
             self.get_weibo_ids_from_page(page)
         print(f"共获取到 {len(self.weibo_id_list)} 条微博 ID")
@@ -322,7 +322,7 @@ async def process_user(user_id: str) -> str:
     try:
         async with ClientSession(cookies=cookies) as session:
             await run(session, graph, user_id)
-        return "成功爬取用户互动关系，可通过 http://localhost:7474 访问Neo4j Browser界面查看数据"
+        return "成功爬取用户互动关系，可通过 http://localhost:7474 访问Neo4j Browser界面查看详细数据"
     except Exception as e:
         logging.error(f"处理用户 {user_id} 时发生错误: {e}")
         return f"失败: {str(e)}"
@@ -385,7 +385,7 @@ def get_data(tx):
     return list(tx.run(query))
 
 
-def convert_to_nx_graph(driver):
+def convert_to_nx_graph(driver,G):
     with driver.session() as session:
         records = session.execute_read(get_data)
 
@@ -445,13 +445,16 @@ def draw_tight_graph(G, target_node, association_degrees):
     # 获取子图中的边
     subgraph_edges = list(subgraph.edges(keys=True, data=True))
 
+    # 创建一个 Figure 对象
+    fig, ax = plt.subplots(figsize=(6, 6))
+
     # 绘制子图
     pos = nx.spring_layout(subgraph, weight='weight', k=1, iterations=20)
     node_labels = {node: data.get('properties', {}).get('screen_name', node) for node, data in subgraph.nodes(data=True)}
 
     # 绘制节点
-    nx.draw_networkx_nodes(subgraph, pos, node_size=500, node_color="skyblue")
-    nx.draw_networkx_labels(subgraph, pos, labels=node_labels, font_size=10, font_weight="bold")
+    nx.draw_networkx_nodes(subgraph, pos, node_size=500, node_color="skyblue", ax=ax)
+    nx.draw_networkx_labels(subgraph, pos, labels=node_labels, font_size=10, font_weight="bold", ax=ax)
 
     # 处理多重边
     edge_weights = {}  # 用于存储每对节点之间的总权重
@@ -475,7 +478,7 @@ def draw_tight_graph(G, target_node, association_degrees):
         alpha = 0.5  # 边的透明度
 
         # 绘制边，使用不同的颜色或透明度来区分多重边
-        nx.draw_networkx_edges(subgraph, pos, edgelist=[(u, v)], arrows=True, edge_color=edge_color, alpha=alpha)
+        nx.draw_networkx_edges(subgraph, pos, edgelist=[(u, v)], arrows=True, edge_color=edge_color, alpha=alpha, ax=ax)
 
         # 获取边的方向向量
         source = pos[u]
@@ -490,14 +493,14 @@ def draw_tight_graph(G, target_node, association_degrees):
 
         # 沿着边的方向显示标签
         label = edge_labels[(u, v)]
-        plt.annotate(label, xy=label_position, xytext=label_offset, textcoords='offset points',
+        ax.annotate(label, xy=label_position, xytext=label_offset, textcoords='offset points',
                      fontsize=5, color='red', ha='center', va='center', rotation=np.degrees(np.arctan2(edge_direction[1], edge_direction[0])))
 
     # 标注目标节点
-    nx.draw_networkx_nodes(subgraph, pos, nodelist=[target_node], node_color='red', node_size=500)
+    nx.draw_networkx_nodes(subgraph, pos, nodelist=[target_node], node_color='red', node_size=500, ax=ax)
 
-    plt.axis('off')  # 关闭坐标轴
-    return plt
+    ax.axis('off')  # 关闭坐标轴
+    return fig  # 返回 Figure 对象
 
 def get_social_network(target_node):
     # 设置matplotlib支持中文
@@ -516,7 +519,7 @@ def get_social_network(target_node):
     # 创建NetworkX多重有向图
     G = nx.MultiDiGraph()
 
-    convert_to_nx_graph(driver)
+    convert_to_nx_graph(driver,G)
     driver.close()
     G = merge_user_and_post(G)
 
